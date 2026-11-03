@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { ingredients, menu, initialStock, canCook, consumeRecipe, migrateStock, recipeText } from './economy.js';
 import { decorateWorld, waterMaterial } from './scenery.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -7,16 +8,15 @@ function fitStage(){const scale=Math.min(window.innerWidth/1600,window.innerHeig
 window.addEventListener('resize',fitStage);window.visualViewport?.addEventListener('resize',fitStage);fitStage();
 $('.help').textContent='USE + / − TO ZOOM · FIXED LANDSCAPE VIEW';
 
-const initial=()=>({money:180,score:0,served:0,stock:{fish:12,potato:16,shrimp:0},upgrades:{fryer:0,tables:0,sign:0,chef:0},time:0});
+const initial=()=>({money:180,score:0,served:0,stock:initialStock(),menuVersion:2,upgrades:{fryer:0,tables:0,sign:0,chef:0},time:0});
 let state;try{state=JSON.parse(localStorage.getItem('salty-catch-v1'));if(!state?.stock||!state?.upgrades)state=initial();}catch{state=initial();}
 state.upgrades.chef ??= 0;
+if(state.menuVersion!==2){const migrated=migrateStock(state.stock);state.stock=migrated.stock;state.money+=migrated.refund;state.menuVersion=2;localStorage.setItem('salty-catch-v1',JSON.stringify(state));}
 let paused=false,tab='orders',orders=[],nextId=1,spawnTimer=0,sound=false;
-const menu=[{name:'Classic Fish & Chips',art:0,price:24,rep:12,needs:{fish:1,potato:2}},{name:'Golden Fish Bites',art:1,price:18,rep:9,needs:{fish:1,potato:1}},{name:'Crispy Shrimp Basket',art:2,price:36,rep:18,needs:{shrimp:2,potato:1}}];
-const ingredients=[{key:'fish',name:'Fresh cod',icon:'🐟',qty:6,cost:30},{key:'potato',name:'Potatoes',icon:'🥔',qty:12,cost:18},{key:'shrimp',name:'King shrimp',icon:'🦐',qty:8,cost:40}];
-const upgrades=[{key:'chef',name:'Hire a chef',icon:'👨‍🍳',desc:'Automatically cooks & serves orders. Ingredients required.',cost:150,max:1},{key:'fryer',name:'Golden fryer',icon:'♨',desc:'Serve orders faster · +$4 per level',cost:100},{key:'tables',name:'Seaside seating',icon:'🪑',desc:'Room for one more waiting customer',cost:120},{key:'sign',name:'Harbour reputation',icon:'✦',desc:'Unlock shrimp orders · +25% reputation',cost:160}];
+const upgrades=[{key:'chef',name:'Hire a chef',icon:'👨‍🍳',desc:'Automatically cooks & serves orders. Ingredients required.',cost:150,max:1},{key:'fryer',name:'Golden fryer',icon:'♨',desc:'Serve orders faster · +$4 per level',cost:100},{key:'tables',name:'Seaside seating',icon:'🪑',desc:'Room for one more waiting customer',cost:120},{key:'sign',name:'Harbour reputation',icon:'✦',desc:'Earn +25% reputation per level',cost:160}];
 function toast(t){$('#toast').textContent=t;$('#toast').classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').classList.remove('show'),2600);}
 function save(){localStorage.setItem('salty-catch-v1',JSON.stringify(state));}
-function affordable(d){return Object.entries(d.needs).every(([k,v])=>state.stock[k]>=v);}
+function affordable(d){return canCook(state.stock,d);}
 function render(){
  $('#money').textContent='$'+state.money.toLocaleString();$('#score').textContent='★ '+state.score;$('#day').textContent=`Day ${1+Math.floor(state.time/180)} · ${String(9+Math.floor(state.time%180/20)).padStart(2,'0')}:${String(Math.floor(state.time%20*3)).padStart(2,'0')}`;
  $('#served').textContent=state.served+' happy customers';$('#order-count').textContent=orders.length;let level=1+Math.floor(state.score/100);$('.level').textContent=level;$('#progress-label').textContent=`${state.score%100} / 100 reputation to next level`;$('#progress').style.width=state.score%100+'%';$('footer strong').textContent=level>3?'Harbour favourite':level>1?'Rising local star':'Seaside beginner';
@@ -24,14 +24,16 @@ function render(){
  renderPanel($('#panel'),tab);renderPanel($('#upgrades-panel'),'upgrades');
 }
 function renderPanel(panel,tab){
- if(tab==='orders'){panel.innerHTML=`<div class="section-title"><strong>At your counter</strong><small>${orders.length} / ${3+state.upgrades.tables} WAITING</small></div>`+(orders.length?orders.map(o=>`<article class="order"><div class="order-top"><span class="avatar">${o.avatar}</span><div><strong>${o.name}</strong><small>${o.cooking?'Cooking up something good…':'Ready for a seaside bite'}</small></div><span class="reward">+$${o.dish.price+state.upgrades.fryer*4}</span></div><div class="dish-row"><span class="dish-art dish-art-${o.dish.art}" role="img" aria-label="${o.dish.name}"></span><span>${o.dish.name}</span></div><button class="serve" data-serve="${o.id}" ${o.cooking||!affordable(o.dish)||paused?'disabled':''}>${o.cooking?'Cooking…':!affordable(o.dish)?'Restock ingredients':'Prepare & serve →'}</button><div class="patience"><i style="width:${o.patience/75*100}%"></i></div></article>`).join(''):'<p class="empty">The tide is bringing new faces.<br>Your next customer will arrive shortly.</p>');}
- if(tab==='pantry')panel.innerHTML='<div class="section-title"><strong>Fresh from the market</strong><small>BUY INGREDIENTS</small></div>'+ingredients.map(i=>`<article class="item"><span class="emoji">${i.icon}</span><div><strong>${i.name}</strong><small class="stock">${state.stock[i.key]} in stock</small><small>+${i.qty} for $${i.cost}</small></div><button class="buy" data-buy="${i.key}" ${state.money<i.cost||paused?'disabled':''}>Buy</button></article>`).join('')+'<p class="empty">Recipes: classic fish & chips uses 1 cod + 2 potatoes. Fish bites use 1 cod + 1 potato. Shrimp baskets use 2 shrimp + 1 potato.</p>';
+ if(tab==='orders'){panel.innerHTML=`<div class="section-title"><strong>At your counter</strong><small>${orders.length} / ${3+state.upgrades.tables} WAITING</small></div>`+(orders.length?orders.map(o=>`<article class="order"><div class="order-top"><span class="avatar">${o.avatar}</span><div><strong>${o.name}</strong><small>${o.cooking?'Cooking up something good…':'Ready for a seaside bite'}</small></div><span class="reward">+$${o.dish.price+state.upgrades.fryer*4}</span></div><div class="dish-row"><span class="dish-art dish-art-0" role="img" aria-label="${o.dish.name}"></span><span>${o.dish.name}<small class="recipe-needs">${recipeText(o.dish)}</small></span></div><button class="serve" data-serve="${o.id}" ${o.cooking||!affordable(o.dish)||paused?'disabled':''}>${o.cooking?'Cooking…':!affordable(o.dish)?'Restock ingredients':'Prepare & serve →'}</button><div class="patience"><i style="width:${o.patience/75*100}%"></i></div></article>`).join(''):'<p class="empty">The tide is bringing new faces.<br>Your next customer will arrive shortly.</p>');}
+ panel.className=tab==='pantry'?'pantry-panel':tab==='recipes'?'recipes-panel':'';
+ if(tab==='recipes')panel.innerHTML='<div class="section-title"><strong>Our menu</strong><small>10 RECIPES</small></div>'+menu.map(d=>`<article class="recipe-card"><div><strong>${d.name}</strong><small>${recipeText(d)}</small></div><span>$${d.price}</span></article>`).join('');
+ if(tab==='pantry')panel.innerHTML='<div class="section-title"><strong>Fresh from the market</strong><small>BUY INGREDIENTS</small></div>'+ingredients.map(i=>`<article class="item"><span class="emoji">${i.icon}</span><div><strong>${i.name}</strong><small class="stock">${state.stock[i.key]} in stock</small><small>+${i.qty} for $${i.cost}</small></div><button class="buy" data-buy="${i.key}" ${state.money<i.cost||paused?'disabled':''}>Buy</button></article>`).join('')+'<p class="empty">Each recipe uses 1 unit of each listed ingredient. Explore all 10 dishes in Recipes.</p>';
  if(tab==='upgrades')panel.innerHTML='<div class="section-title"><strong>Grow your little empire</strong><small>MAKE IT YOURS</small></div>'+upgrades.map(u=>{let n=state.upgrades[u.key],max=u.max??3,cost=u.cost*(n+1);return `<article class="item"><span class="emoji">${u.icon}</span><div><strong>${u.name} · ${n}/${max}</strong><small>${u.desc}</small><small>${n===max?(u.key==='chef'?'Chef hired · automatic service':'Fully upgraded'):'$'+cost}</small></div><button class="buy" data-upgrade="${u.key}" ${n===max||state.money<cost||paused?'disabled':''}>${n===max?'✓':u.key==='chef'?'Hire':'↗'}</button></article>`;}).join('');
 }
 $('main').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;if(b.dataset.serve){let o=orders.find(o=>o.id===+b.dataset.serve);if(!startCooking(o))return;render();}if(b.dataset.buy){let i=ingredients.find(i=>i.key===b.dataset.buy);if(state.money<i.cost)return;state.money-=i.cost;state.stock[i.key]+=i.qty;toast(`Fresh delivery: +${i.qty} ${i.name.toLowerCase()}`);save();render();}if(b.dataset.upgrade){let u=upgrades.find(u=>u.key===b.dataset.upgrade),cost=u.cost*(state.upgrades[u.key]+1);if(paused||state.upgrades[u.key]>=(u.max??3)||state.money<cost)return;state.money-=cost;state.upgrades[u.key]++;toast(u.key==='chef'?'Chef hired! Your kitchen now runs automatically.':u.name+' upgraded!');decorateUpgrades();save();render();}});
 function startCooking(o){
  if(paused||!o||o.cooking||!affordable(o.dish))return false;
- Object.entries(o.dish.needs).forEach(([k,v])=>state.stock[k]-=v);
+ if(!consumeRecipe(state.stock,o.dish))return false;
  o.cooking=Math.max(1.2,4-state.upgrades.fryer*.8);save();return true;
 }
 function togglePopup(kind,force){const popup=$(`#${kind}-popup`),button=$(`#${kind}-toggle`);const open=force??popup.hidden;popup.hidden=!open;button.setAttribute('aria-expanded',String(open));button.classList.toggle('active',open);if(open)popup.querySelector('.close-popup').focus();else button.focus();}
@@ -97,7 +99,7 @@ table(6,1.6,'#e9ad60');table(6,-3,'#e87563');table(-2.8,5,'#73b7ab');
 new THREE.TextureLoader().load(`${import.meta.env.BASE_URL}images/food-plates.png`,foodTexture=>{
  foodTexture.colorSpace=THREE.SRGBColorSpace;
  [[6,1.6],[6,-3],[-2.8,5]].forEach(([x,z],index)=>{
-  const texture=foodTexture.clone();texture.repeat.set(1/3,1);texture.offset.set(index/3,0);texture.needsUpdate=true;
+  const texture=foodTexture.clone();texture.repeat.set(1/3,1);texture.offset.set(0,0);texture.needsUpdate=true;
   const plate=new THREE.Mesh(new THREE.PlaneGeometry(1.05,1.05),new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
   plate.rotation.x=-Math.PI/2;plate.position.set(x,1.095,z);scene.add(plate);
  });
@@ -135,7 +137,7 @@ const peopleColors=['#d4755d','#619d9a','#e3b65e','#7c8cac','#b38fbd'];function 
 }
 
 const walkers=[];for(let i=0;i<7;i++){let p=person(peopleColors[i%5]);p.position.set(-9+i*2.7,.4,4.5);walkers.push({p,speed:.3+i*.04,dir:i%2?1:-1});}
-function addOrder(){if(orders.length>=3+state.upgrades.tables)return;const n=nextId++,dish=menu[Math.floor(Math.random()*(state.upgrades.sign?3:2))],names=['Oliver','Amelia','George','Isla','Harry','Sophie','Noah','Mia'];const p=person(peopleColors[n%5]);p.position.set(-6,.4,3.5);orders.push({id:n,name:names[n%8],avatar:['👨🏻','👩🏽','👨🏼‍🦱','👩🏻‍🦰'][n%4],dish,patience:75,cooking:0,person:p});render();}
+function addOrder(){if(orders.length>=3+state.upgrades.tables)return;const n=nextId++,dish=menu[Math.floor(Math.random()*menu.length)],names=['Oliver','Amelia','George','Isla','Harry','Sophie','Noah','Mia'];const p=person(peopleColors[n%5]);p.position.set(-6,.4,3.5);orders.push({id:n,name:names[n%8],avatar:['👨🏻','👩🏽','👨🏼‍🦱','👩🏻‍🦰'][n%4],dish,patience:75,cooking:0,person:p});render();}
 const animateScenery=decorateWorld({scene,box,sphere,cylinder,material});
 addOrder();addOrder();decorateUpgrades();render();
 $('#zoom-in').onclick=()=>{camera.position.sub(controls.target).multiplyScalar(.87).add(controls.target);};$('#zoom-out').onclick=()=>{camera.position.sub(controls.target).multiplyScalar(1.15).add(controls.target);};$('#rotate').onclick=()=>{let p=camera.position.clone().sub(controls.target);p.applyAxisAngle(new THREE.Vector3(0,1,0),Math.PI/4);camera.position.copy(p.add(controls.target));};
