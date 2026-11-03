@@ -17,6 +17,7 @@ const expected = {
 test('menu matches all ten requested recipes and only five ingredients', () => {
   assert.deepEqual(ingredients.map(i => i.key), ['fish', 'chips', 'peas', 'lemon', 'sauce']);
   assert.equal(menu.length, 10);
+  assert.deepEqual(menu.map(recipe => recipe.art), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
   for (const recipe of menu) assert.deepEqual(recipe.needs, Object.fromEntries(expected[recipe.name].map(key => [key, 1])));
 });
 test('each meal consumes only its own ingredients exactly once', () => {

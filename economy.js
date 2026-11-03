@@ -18,7 +18,7 @@ export const menu = [
   { name: 'Lemon Fish Portion', price: 28, rep: 14, needs: { fish: 1, lemon: 1, sauce: 1 } },
   { name: 'Crispy Chips Basket', price: 18, rep: 9, needs: { chips: 1, peas: 1, sauce: 1 } },
   { name: 'Saucy Chips', price: 12, rep: 6, needs: { chips: 1, sauce: 1 } },
-];
+].map((dish, art) => ({ ...dish, art }));
 export const initialStock = () => ({ fish: 12, chips: 16, peas: 8, lemon: 8, sauce: 8 });
 export function canCook(stock, recipe) {
   return Object.entries(recipe.needs).every(([key, amount]) => (stock[key] ?? 0) >= amount);
