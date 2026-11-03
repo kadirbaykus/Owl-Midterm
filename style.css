@@ -19,3 +19,9 @@ aside{min-height:0;padding:22px 22px 12px;overflow:hidden;display:flex;flex-dire
 .item{grid-column:1/-1;margin:0;padding:15px;min-height:100px}.item strong{font-size:14px}.item small{font-size:11px;line-height:1.5}
 #panel>.empty{font-size:12px;padding:10px 0;line-height:1.6}.world{min-height:0;min-width:0;height:auto}
 footer{height:auto;padding:0 28px;min-width:0}.floating-label{top:17%;left:41%}
+
+/* Original illustrated dishes replace the previous food emoji. */
+.dish-row{gap:8px;min-height:64px;margin:6px 0}
+.dish-art{display:block;flex:0 0 72px;width:72px;height:64px;background-image:url('/images/food-plates.png');background-repeat:no-repeat;background-size:300% 100%;filter:drop-shadow(0 3px 2px #79522c20)}
+.dish-art-0{background-position:0% center}.dish-art-1{background-position:50% center}.dish-art-2{background-position:100% center}
+.dish-row>span:last-child{font-size:10px;font-weight:600;line-height:1.5}
