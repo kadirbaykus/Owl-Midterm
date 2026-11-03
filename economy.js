@@ -8,16 +8,16 @@ export const ingredients = [
 
 // One unit of each listed ingredient makes one meal.
 export const menu = [
-  { name: 'Classic Fish & Chips', price: 24, rep: 12, needs: { fish: 1, chips: 1 } },
-  { name: 'Lemon Fish & Chips', price: 28, rep: 14, needs: { fish: 1, chips: 1, lemon: 1 } },
-  { name: 'Saucy Fish & Chips', price: 28, rep: 14, needs: { fish: 1, chips: 1, sauce: 1 } },
-  { name: 'Pea Combo Meal', price: 28, rep: 14, needs: { fish: 1, chips: 1, peas: 1 } },
-  { name: 'Light Fish Plate', price: 26, rep: 13, needs: { fish: 1, peas: 1, lemon: 1 } },
-  { name: 'Street Chips', price: 16, rep: 8, needs: { chips: 1, sauce: 1, lemon: 1 } },
-  { name: 'Green Fish Basket', price: 28, rep: 14, needs: { fish: 1, peas: 1, sauce: 1 } },
-  { name: 'Lemon Fish Portion', price: 28, rep: 14, needs: { fish: 1, lemon: 1, sauce: 1 } },
-  { name: 'Crispy Chips Basket', price: 18, rep: 9, needs: { chips: 1, peas: 1, sauce: 1 } },
-  { name: 'Saucy Chips', price: 12, rep: 6, needs: { chips: 1, sauce: 1 } },
+  { name: 'Classic Fish & Chips', price: 24, needs: { fish: 1, chips: 1 } },
+  { name: 'Lemon Fish & Chips', price: 28, needs: { fish: 1, chips: 1, lemon: 1 } },
+  { name: 'Saucy Fish & Chips', price: 28, needs: { fish: 1, chips: 1, sauce: 1 } },
+  { name: 'Pea Combo Meal', price: 28, needs: { fish: 1, chips: 1, peas: 1 } },
+  { name: 'Light Fish Plate', price: 26, needs: { fish: 1, peas: 1, lemon: 1 } },
+  { name: 'Street Chips', price: 16, needs: { chips: 1, sauce: 1, lemon: 1 } },
+  { name: 'Green Fish Basket', price: 28, needs: { fish: 1, peas: 1, sauce: 1 } },
+  { name: 'Lemon Fish Portion', price: 28, needs: { fish: 1, lemon: 1, sauce: 1 } },
+  { name: 'Crispy Chips Basket', price: 18, needs: { chips: 1, peas: 1, sauce: 1 } },
+  { name: 'Saucy Chips', price: 12, needs: { chips: 1, sauce: 1 } },
 ].map((dish, art) => ({ ...dish, art }));
 export const initialStock = () => ({ fish: 12, chips: 16, peas: 8, lemon: 8, sauce: 8 });
 export function canCook(stock, recipe) {
@@ -36,3 +36,8 @@ export function migrateStock(stock) {
   };
 }
 export const recipeText = recipe => Object.entries(recipe.needs).map(([key, amount]) => `${amount} ${ingredients.find(i => i.key === key).name}`).join(' · ');
+
+// Every dollar of sales income also grants exactly one reputation point.
+export function saleReward(recipe, upgrades) {
+  return Math.round((recipe.price + upgrades.fryer * 4) * (1 + upgrades.sign * .25));
+}

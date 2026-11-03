@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { menu, ingredients, initialStock, canCook, consumeRecipe, migrateStock } from '../economy.js';
+import { menu, ingredients, initialStock, canCook, consumeRecipe, migrateStock, saleReward } from '../economy.js';
 
 const expected = {
   'Classic Fish & Chips': ['fish', 'chips'],
@@ -40,4 +40,15 @@ test('old potato stock becomes chips and retired shrimp are refunded at purchase
   assert.deepEqual(migrateStock(old), { stock: { fish: 3, chips: 17, peas: 8, lemon: 8, sauce: 8 }, refund: 20 });
   assert.deepEqual(old, { fish: 3, potato: 17, shrimp: 4 });
   assert.deepEqual(migrateStock({ fish: 0, chips: 0, peas: 0, lemon: 0, sauce: 0 }).stock, { fish: 0, chips: 0, peas: 0, lemon: 0, sauce: 0 });
+});
+
+test('sales pay the same amount used for reputation, including all upgrades', () => {
+  const recipe=menu.find(d=>d.name==='Lemon Fish & Chips');
+  assert.equal(saleReward(recipe,{fryer:3,sign:0}),40);
+  assert.equal(saleReward(recipe,{fryer:3,sign:1}),50);
+  for(const dish of menu) for(let fryer=0;fryer<=3;fryer++) for(let sign=0;sign<=3;sign++){
+    const amount=saleReward(dish,{fryer,sign});
+    assert.equal(amount,Math.round((dish.price+fryer*4)*(1+sign*.25)));
+    assert.ok(Number.isInteger(amount)&&amount>0);
+  }
 });

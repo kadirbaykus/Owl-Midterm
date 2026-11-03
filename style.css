@@ -77,3 +77,11 @@ header,footer{background:linear-gradient(180deg,#fffdf2,#f7f4e5);border-color:#d
 .dish-art-9{background-size:493.283582% 200%;background-position:100.000000% 100%;}
 #panel.recipes-panel .recipe-card .dish-art{flex:0 0 44px;width:44px;height:30px;margin:0}
 .recipe-card>div{flex:1;min-width:0}.recipe-card{padding-top:6px;padding-bottom:6px}
+
+#reward-layer{position:absolute;inset:0;pointer-events:none;z-index:30;overflow:hidden}
+.sale-reward{position:absolute;background:linear-gradient(135deg,#fff4bd,#fffce7);border:2px solid #e3c578;border-radius:22px;box-shadow:0 5px 20px #42613d30;padding:9px 17px;color:#50642f;font-weight:800;font-size:18px;white-space:nowrap}
+.reward-particle{position:absolute;left:0;top:0;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;font-size:20px;font-weight:800;will-change:transform,opacity}
+.reward-particle.coin{color:#8f5c16;background:linear-gradient(135deg,#fff3a0,#edb644);border:2px solid #fff4bc;box-shadow:0 2px 8px #ac792c30}
+.reward-particle.star{color:#fff0a7;background:linear-gradient(135deg,#98bd65,#5a8e48);border:2px solid #dcecb3;box-shadow:0 2px 8px #56854230}
+#money,#score{display:inline-block;transform-origin:center}
+.game-popup .order .reward small{color:#8b9d50;text-align:right;font-size:8px;margin-top:3px}
