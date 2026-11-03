@@ -22,6 +22,6 @@ npm run preview
 
 Prepare customer orders before their patience runs out. Buy cod, potatoes and shrimp in **Pantry**. Spend earnings in **Upgrades** to improve the fryer, add waiting capacity and unlock shrimp orders. Each sale earns money and reputation; every 100 reputation raises your level. Ingredients are deducted when cooking begins. Pausing freezes cooking and customers.
 
-Drag the scene to rotate, scroll to zoom, or use the scene buttons. Progress saves automatically to this browser's local storage; **Save game** saves immediately and **New game** resets progress after confirmation. Sound is optional. A WebGL-capable browser is required.
+The interface uses a fixed 16:9 landscape stage, scaled to fit the screen without scrolling. On phones, use landscape orientation for larger controls. Camera dragging and wheel zoom are disabled; use the scene buttons to adjust the view. Progress saves automatically to this browser's local storage; **Save game** saves immediately and **New game** resets progress after confirmation. Sound is optional. A WebGL-capable browser is required.
 
 This is a single-player prototype: saves are local to the current browser, with no accounts or online synchronisation. Customer queues restart on reload. No API keys or external services are required.

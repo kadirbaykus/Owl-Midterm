@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const $=s=>document.querySelector(s);
+function fitStage(){const scale=Math.min(window.innerWidth/1600,window.innerHeight/900);const app=$('#app');app.style.transform=`scale(${scale})`;app.style.left=`${(window.innerWidth-1600*scale)/2}px`;app.style.top=`${(window.innerHeight-900*scale)/2}px`;}
+window.addEventListener('resize',fitStage);window.visualViewport?.addEventListener('resize',fitStage);fitStage();
+$('.help').textContent='USE + / − TO ZOOM · FIXED LANDSCAPE VIEW';
+
 const initial=()=>({money:180,score:0,served:0,stock:{fish:12,potato:16,shrimp:0},upgrades:{fryer:0,tables:0,sign:0},time:0});
 let state;try{state=JSON.parse(localStorage.getItem('salty-catch-v1'));if(!state?.stock||!state?.upgrades)state=initial();}catch{state=initial();}
 let paused=false,tab='orders',orders=[],nextId=1,spawnTimer=0,sound=false;
@@ -24,7 +28,7 @@ $('#pause').onclick=()=>{paused=!paused;$('#pause').textContent=paused?'▶':'�
 $('#sound').onclick=()=>{sound=!sound;$('#sound').style.background=sound?'#e3ead2':'transparent';toast(sound?'Kitchen sounds on':'Kitchen sounds off');};
 function ding(){if(!sound)return;const a=new AudioContext(),osc=a.createOscillator(),g=a.createGain();osc.connect(g);g.connect(a.destination);osc.frequency.setValueAtTime(660,a.currentTime);osc.frequency.setValueAtTime(880,a.currentTime+.1);g.gain.setValueAtTime(.08,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.4);osc.start();osc.stop(a.currentTime+.4);osc.onended=()=>a.close();}
 const canvas=$('#scene'),renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.setClearColor('#8ed5de');renderer.outputColorSpace=THREE.SRGBColorSpace;
-const scene=new THREE.Scene();scene.fog=new THREE.Fog('#9bdce1',38,80);const camera=new THREE.PerspectiveCamera(36,1,.1,100);camera.position.set(18,21,25);const controls=new OrbitControls(camera,canvas);controls.target.set(0,0,0);controls.enableDamping=true;controls.maxPolarAngle=Math.PI/2.5;controls.minDistance=14;controls.maxDistance=43;controls.enablePan=false;controls.update();
+const scene=new THREE.Scene();scene.fog=new THREE.Fog('#9bdce1',38,80);const camera=new THREE.PerspectiveCamera(36,1,.1,100);camera.position.set(18,21,25);const controls=new OrbitControls(camera,canvas);controls.target.set(0,0,0);controls.enableDamping=true;controls.maxPolarAngle=Math.PI/2.5;controls.minDistance=14;controls.maxDistance=43;controls.enablePan=false;controls.enableRotate=false;controls.enableZoom=false;controls.update();
 scene.add(new THREE.HemisphereLight('#fff9df','#7caa96',2.5));const sun=new THREE.DirectionalLight('#fff3ce',3);sun.position.set(-8,20,10);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-22,right:22,top:22,bottom:-22});sun.shadow.bias=-.001;scene.add(sun);
 const mat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.85});const mats={};function material(c){return mats[c]??(mats[c]=mat(c));}
 function box(w,h,d,c,x,y,z,parent=scene){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
