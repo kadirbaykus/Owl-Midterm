@@ -42,7 +42,34 @@ box(6,3.1,4.7,'#fff0cf',.5,1.9,-2.5);box(6.3,.25,4.9,'#40736c',.5,.55,-2.5);for(
 box(4.7,1.35,.14,'#335a55',.5,2.05,-.08);box(4.4,1.05,.15,'#a1d4ca',.5,2.08,.01);for(let x=-1.6;x<3;x+=1.1)box(.06,1.2,.2,'#fff6d8',x,2.1,.08);box(5,.2,.75,'#bc885b',.5,1.35,.25);for(let i=0;i<10;i++){let a=box(.56,.12,1.45,i%2?'#fff3d7':'#de775d',-2.02+i*.56,3.05,.5);a.rotation.x=.16;box(.56,.29,.1,i%2?'#fff3d7':'#de775d',-2.02+i*.56,2.85,1.2);}for(const x of [-2.2,3.2])cylinder(.055,.055,2.6,'#e8e0b9',x,1.65,1.1);
 box(.95,1.9,.12,'#448c80',-2.48,1.6,-.05);sphere(.06,'#ffe3a0',-2.2,1.6,.07);box(.8,1,.1,'#8cc5b9',3.51,2.25,-2.4).rotation.y=Math.PI/2;
 function sign(text,w,h,x,y,z){let c=document.createElement('canvas');c.width=1024;c.height=256;let ctx=c.getContext('2d');ctx.fillStyle='#285c54';ctx.fillRect(0,0,1024,256);ctx.strokeStyle='#f3dda3';ctx.lineWidth=8;ctx.strokeRect(15,15,994,226);ctx.fillStyle='#fff1c8';ctx.font='bold 76px Georgia';ctx.textAlign='center';ctx.fillText(text,512,155);let m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({map:new THREE.CanvasTexture(c),roughness:1}));m.position.set(x,y,z);scene.add(m);return m;}
-sign('THE SALTY CATCH',4.7,.8,.5,3.65,.05);
+// Framed restaurant fascia with a crisp, original maritime brand mark.
+{
+ const c=document.createElement('canvas');c.width=2048;c.height=512;
+ const ctx=c.getContext('2d');
+ ctx.fillStyle='#153e3b';ctx.fillRect(0,0,2048,512);
+ ctx.strokeStyle='#d7b777';ctx.lineWidth=5;ctx.strokeRect(22,22,2004,468);
+ ctx.strokeStyle='#6d8975';ctx.lineWidth=2;ctx.strokeRect(37,37,1974,438);
+ // Circular fish emblem, drawn as vectors so it stays sharp on zoom.
+ ctx.save();ctx.translate(240,256);ctx.strokeStyle='#e8cd93';ctx.lineWidth=6;
+ ctx.beginPath();ctx.arc(0,0,137,0,Math.PI*2);ctx.stroke();
+ ctx.beginPath();ctx.arc(0,0,122,0,Math.PI*2);ctx.lineWidth=2;ctx.stroke();
+ ctx.fillStyle='#e8cd93';ctx.beginPath();ctx.ellipse(-12,-12,75,35,0,0,Math.PI*2);ctx.fill();
+ ctx.beginPath();ctx.moveTo(48,-12);ctx.lineTo(94,-50);ctx.lineTo(94,26);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#153e3b';ctx.beginPath();ctx.arc(-57,-20,7,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='#e8cd93';ctx.lineWidth=4;
+ for(let row=0;row<2;row++){ctx.beginPath();for(let i=0;i<=120;i++){const x=-60+i,y=53+row*19+Math.sin(i/120*Math.PI*3)*5;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();}ctx.restore();
+ ctx.fillStyle='#f8edd2';ctx.textAlign='center';ctx.font='bold 116px Georgia';ctx.fillText('THE SALTY CATCH',1170,253,1550);
+ ctx.fillStyle='#d7b777';ctx.font='500 40px Arial';ctx.fillText('F I S H   &   C H I P S',1170,337);
+ ctx.strokeStyle='#b59b68';ctx.lineWidth=2;
+ for(const x of [660,1440]){ctx.beginPath();ctx.moveTo(x,321);ctx.lineTo(x+230,321);ctx.stroke();}
+ box(5.55,1.17,.18,'#9a7746',.5,3.65,.13);
+ box(5.4,1.04,.06,'#153e3b',.5,3.65,.24);
+ const texture=new THREE.CanvasTexture(c);texture.colorSpace=THREE.SRGBColorSpace;
+ texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
+ const fascia=new THREE.Mesh(new THREE.PlaneGeometry(5.28,.98),new THREE.MeshBasicMaterial({map:texture}));
+ fascia.position.set(.5,3.65,.28);scene.add(fascia);
+ for(const x of [-2.15,3.15]){sphere(.035,'#e8cd93',x,4.14,.29);sphere(.035,'#e8cd93',x,3.16,.29);}
+}
 // Outdoor dining.
 function table(x,z,color='#e8ae61'){cylinder(.78,.78,.12,'#f4e2b7',x,1.02,z);cylinder(.09,.14,.7,'#7d7861',x,.64,z);for(const dx of [-1.08,1.08]){box(.65,.12,.65,'#fff2cc',x+dx,.65,z);box(.65,.65,.12,'#74a7a0',x+dx,.98,z-.3);for(const a of [-.22,.22])box(.06,.5,.06,'#857a5e',x+dx+a,.37,z);}cylinder(.035,.035,2.9,'#e7ddbc',x,1.8,z);const canopy=cylinder(0,1.45,.6,color,x,3.05,z);canopy.geometry.dispose();canopy.geometry=new THREE.ConeGeometry(1.45,.65,8);cylinder(.08,.08,.12,'#fff0c6',x,3.44,z);cylinder(.16,.19,.12,'#fff4db',x+.35,1.15,z);}
 table(6,1.6,'#e9ad60');table(6,-3,'#e87563');table(-2.8,5,'#73b7ab');
